@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlyHigh</title>
+    <link rel="icon" type="image/png" href="static/css/logo.png" alt="FlyHigh"/>
+    <script src="https://kit.fontawesome.com/00ac4f1850.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="static/css/dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="/static/js/dashboard.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body>
+    <main>
+      <nav class="Navigation">
+        <ul>
+          <li><strong>Welcome to FlyHigh</strong></li>
+        </ul>
+        <ul class="nav_list">
+          <li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/arrivals_departures">Terminal management</li>
+            <li><a href="/dashboard">Dashboard</li>
+            <li><a href="/logout" role="button">Log-out</a></li>
+          </li>
+        </ul>
+      </nav>
+      <div id="current-time" style="position: fixed; right: 2px; top:65px; font-size: 40px; z-index: 1;"></div>
+      <div class="content">
+        <section class="dashboard-item">
+          <h1>Flight Information</h1>
+          <div id="radar-container">
+            <div class="radar">
+              <div class="radar__dot"></div>
+              <div class="radar__dot"></div>
+              <div class="radar__dot"></div>
+            </div>
+          </div>
+          <table id="flight-data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Origin Airport</th>
+                <th>Altitude</th>
+                <th>Latitude,Longitude</th>
+                <th>Ground Speed</th>
+                <th>Heading</th>
+                <th>Destination Airport</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for flight in flight_data %}
+              <tr>
+                <td>{{ flight.name }}</td>
+                <td>{{ flight.origin_airport_name }}</td>
+                <td>{{ flight.altitude }}</td>
+                <td> {{ flight.latitude, flight.longitude }}</td>
+                <td>{{ flight.ground_speed }}</td>
+                <td>{{ flight.heading }}</td>
+                <td>{{ flight.destination_airport_name }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+        <h1>Weather Information</h1>
+        <div class="grid">
+          <div class="weather-data">
+            <div class="location">
+              <p><strong>Location:</strong> {{newvar['location']['name']}}</p>
+              <p><strong>Region:</strong> {{newvar['location']['region']}}</p>
+              <p><strong>Latitude:</strong> {{newvar['location']['lat']}}</p>
+              <p><strong>Longitude:</strong> {{newvar['location']['lon']}}</p>
+            </div>
+            <div class="condition">
+              <p><strong>Condition:</strong> {{newvar['current']['condition']['text']}}</p>
+              <img
+                src={{newvar['current']['condition']['icon']}}
+                alt="Weather Icon"/>
+                <p><strong>Pressure:</strong>{{newvar['current']['pressure_mb']}}
+            </div>
+            <div class="details">
+              <p><strong>Wind (mph):</strong> {{newvar['current']['wind_mph']}}</p>
+              <p><strong>Wind Degree:</strong> {{ newvar['current']['wind_degree']}}</p>
+              <p><strong>Wind Direction:</strong> {{newvar['current']['wind_dir']}}</p>
+              <p><strong>Humidity:</strong> {{newvar['current']['humidity']}}</p>
+              <p><strong>Cloud:</strong> {{ newvar['current']['cloud']}}</p>
+            </div>
+            <div class="air-quality">
+              <p><strong>Air Quality:</strong></p>
+              <ul class="AQ">
+                <li><strong>CO:</strong> {{ newvar['current']['air_quality']['co']}}</li>
+                <li><strong>NO2:</strong> {{ newvar['current']['air_quality']['no2']}}</li>
+                <li><strong>O3:</strong> {{ newvar['current']['air_quality']['o3']}}</li>
+                <li><strong>SO2:</strong> {{ newvar['current']['air_quality']['so2']}} </li>
+                <li><strong>PM2.5:</strong> {{ newvar['current']['air_quality']['pm2_5']}}</li>
+                <li><strong>PM10:</strong> {{ newvar['current']['air_quality']['pm10']}}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+        <div class="chatbox-container">
+          <button onclick="myFunction()" id="chatbut">Chat</button>
+          <div class="chat-content">
+            <form id="messageForm">
+                        <div id="chatDiv"></div>
+              <input type="text" id="messageInput" placeholder="Type your message..." required>
+              <button type="button" onclick="sendMessage()" id="Send">Send</button>
+            </form>
+          </div>
+        </div>
+        <div class="em">
+        <button id="emergencyButton">SOS</button>
+        </div>
+    <footer>
+      Made with <i class="fa-solid fa-heart"></i> by Debosmita Bedajna.
+    </footer>
+    </main>
+  </body>
+  <script>
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    function sendMessage() {
+      var message = document.getElementById('messageInput').value;
+      socket.emit('message', { user: '{{ user.username }}', message: message });
+      document.getElementById('messageInput').value = '';
+  };
+
+  socket.on('message', function (data) {
+    var chatContent = document.getElementById('chatDiv');
+
+    var p = document.createElement('p');
+    p.appendChild(document.createTextNode(data.user + ': ' + data.message));
+
+    chatContent.appendChild(p);
+});
+    document.getElementById('messageForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+    });
+
+    
+      const flights = [
+        {% for flight in flight_data %}
+          {
+            name: "{{ flight.name }}",
+            latitude: {{ flight.latitude }},
+            longitude: {{ flight.longitude }}
+          },
+        {% endfor %}
+      ];
+
+      function convertToRadarPosition(latitude, longitude) {
+        const radarX = (longitude + 180) * (100 / 360);
+        const radarY = (90 - latitude) * (100 / 180);
+        return { x: radarX, y: radarY };
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        flights.forEach((flight) => {
+          const radarPosition = convertToRadarPosition(flight.latitude, flight.longitude);
+          const flightMarker = document.createElement('div');
+          flightMarker.classList.add('radar__dot');
+          flightMarker.style.top = `${radarPosition.y}%`;
+          flightMarker.style.left = `${radarPosition.x}%`;
+          flightMarker.dataset.name = `Flight ${flight.name}`;
+          document.querySelector('.radar').appendChild(flightMarker);
+        });
+      });
+
+    document.getElementById('emergencyButton').addEventListener('click', function() {
+      socket.emit('emergency');
+  });
+
+    socket.on('emergency_alert', function() {
+      alert('Emergency Alert! Seek immediate action!');
+  });
+
+  </script>
+</html>

@@ -23,7 +23,7 @@ curruser={}
 app.config['SESSION_COOKIE_SECURE'] = True  
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1) 
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent')
 
 
 
